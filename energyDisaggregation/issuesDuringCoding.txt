@@ -1,0 +1,12 @@
+1) Warning: Tried to combine class descriptions with incompatible names; output target indices may not match input target indices 
+> In prtDataInterfaceCategoricalTargets>prtDataInterfaceCategoricalTargets.catClasses at 343
+  In prtDataSetClass>prtDataSetClass.catObservations at 170
+  In establishFeatureSet at 74 
+
+I don't know why I'm getting this warning.  Nothing is shared between the classes, and it doesn't always happen...?
+
+
+2) the size of observationInfo increases even though no observations were added
+
+Hacky fix:
+- only concatenate observations if there were observations present in the onDS and offDS

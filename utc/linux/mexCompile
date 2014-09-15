@@ -1,0 +1,11 @@
+#! /bin/tcsh
+# N.Bercher, UMR TETIS, 20-06-2006.
+# Maison de la Teledetection,
+# Cemagref of Montpellier, France.
+# nicolas.bercher@teledetection.fr
+
+set OUT_DIR  = "."
+set C_SRC_PATH = "../src"
+
+mex -lm -g -o ${OUT_DIR}/utc2datenum.mexglx ${C_SRC_PATH}/utc2datenum.c
+mex -lm -g -o ${OUT_DIR}/utc_time.mexglx ${C_SRC_PATH}/utc_time.c
