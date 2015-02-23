@@ -6,27 +6,87 @@
 % Based on code originally from Kyle Bradbury, PhD, Duke University.
 % The purpose of this function is to detect events from energyDataSets.
 %
-% This function just wraps detectEventConfidencs.
+% detectedEvents = detectEnergyEvents(energyDS,eventParameters,varargin)
+%
+% This function just wraps detectEventConfidences.
+%
+% Check the default options for the input to detectEventConfidences below.
+%
+% Change log:
+% 150219:
+%   - added parser functionality
+%   - removed eventParameters from the inputs
 
-function detectedEvents = detectEnergyEvents(energyDS,eventParameters,varargin)
 
-ds = eventParameters;
+function detectedEvents = detectEnergyEvents(energyDS,varargin)
 
-if isempty(varargin)
-  for deviceInc = 1:energyDS.nFeatures
-    ds.data = energyDS.data(:,deviceInc);
-    detectedEvents(deviceInc) = detectEventConfidences(ds);
-  end
-else
-  if strcmp(varargin{1},'sobel')
-    for deviceInc = 1:energyDS.nFeatures
-      ds.data = energyDS.data(:,deviceInc);
-      detectedEvents(deviceInc) = detectEventConfidences(ds,'sobel');
-    end
-  else
-    for deviceInc = 1:energyDS.nFeatures
-      ds.data = energyDS.data(:,deviceInc);
-      detectedEvents(deviceInc) = detectEventConfidences(ds);
-    end
-  end
+%% Parse the optional inputs.
+options.device = 1:energyDS.nFeatures;
+options.detectorType = 'glr';
+options.halfWindowInS = 61;
+options.threshold = 0.2;
+options.smoothFactor = 0.5;
+options.bufferLength = 0;
+
+parsedOut = prtUtilSimpleInputParser(options,varargin);
+
+
+device = parsedOut.device;
+detectorType = parsedOut.detectorType;
+
+ds.halfWindowInS = parsedOut.halfWindowInS;
+ds.threshold = parsedOut.threshold;
+ds.timeStamps = energyDS.getTimesFromUTC('timeScale','days','zeroTimes',false);
+ds.smoothFactor = parsedOut.smoothFactor;
+ds.bufferLength = parsedOut.bufferLength;
+
+
+%%%%%
+
+%%
+for dInc = 1:numel(device)
+    ds.data = energyDS.data(:,device(dInc));
+    detectedEvents(device(dInc)) = detectEventConfidences(ds,'detectorType',detectorType);
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% 
+% if isempty(varargin)
+%   for deviceInc = 1:energyDS.nFeatures
+%     ds.data = energyDS.data(:,deviceInc);
+%     detectedEvents(deviceInc) = detectEventConfidences(ds);
+%   end
+% else
+%   if strcmp(varargin{1},'sobel')
+%     for deviceInc = 1:energyDS.nFeatures
+%       ds.data = energyDS.data(:,deviceInc);
+%       detectedEvents(deviceInc) = detectEventConfidences(ds,'sobel');
+%     end
+%   else
+%     for deviceInc = 1:energyDS.nFeatures
+%       ds.data = energyDS.data(:,deviceInc);
+%       detectedEvents(deviceInc) = detectEventConfidences(ds);
+%     end
+%   end
+% end

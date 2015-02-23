@@ -29,15 +29,34 @@ function detectedEvents = detectEventConfidences(ds,varargin)
 %                     - this structure contains the confidences from all
 %                       data and the timestamps from the data, along with
 %                       marked events based on the input threshold
+%
+% DEFAULT INPUTS:
+% ds.data = energyDataSet.data(:,1);
+% ds.halfWindowInS = 120;
+% ds.threshold = 0.2;
+% ds.smoothFactor = 0.5;
+% ds.timeStamps = [energyDataSet.observationInfo.times]';
+% ds.bufferLength = 30;
 
-%% Check if anything else was sent in.
-if ~isempty(varargin)
-  if strcmp(varargin{1},'sobel')
+
+options.detectorType = 'glr';
+parsedOut = prtUtilSimpleInputParser(options,varargin);
+detectorType = parsedOut.detectorType;
+
+if strcmp(detectorType,'sobel')
     useSobel = 1;
-  end
 else
-  useSobel = 0;
+    useSobel = 0;
 end
+
+% %% Check if anything else was sent in.
+% if ~isempty(varargin)
+%   if strcmp(varargin{1},'sobel')
+%     useSobel = 1;
+%   end
+% else
+%   useSobel = 0;
+% end
 
 %% Extract data from the input structure
 data            = ds.data;
@@ -70,7 +89,7 @@ filter(bufferRange)     =  0 ;
 
 % Evaluate filter output - smooth first, then convolve with edge detector
 hFilterSize = roundodd(windowLength*smoothFactor) ;
-hFilter = fspecial('average', hFilterSize) ;
+hFilter = fspecial('average', [hFilterSize 1]) ;
 smoothData = imfilter(data,hFilter) ;
 filteredData = imfilter(smoothData,filter) ;
 
@@ -102,12 +121,15 @@ if useSobel
   offIndex = [false;diff(offLogicals)>0];
 end
 
+%% Change made on 7 January 2015
+detectedEvents = energyEventClass;
+
 detectedEvents.onEvents         = data(onIndex) ;
 detectedEvents.offEvents        = data(offIndex) ;
 detectedEvents.onEventsIndex    = find(onIndex) ;
 detectedEvents.offEventsIndex   = find(offIndex) ;
-detectedEvents.onEventsTime     = timeStamps(detectedEvents.onEventsIndex) ;
-detectedEvents.offEventsTime    = timeStamps(detectedEvents.offEventsIndex) ;
+detectedEvents.onEventsTimes    = timeStamps(detectedEvents.onEventsIndex) ;
+detectedEvents.offEventsTimes   = timeStamps(detectedEvents.offEventsIndex) ;
 % Add the confidences themselves to allow scoring later.
 if useSobel
   detectedEvents.confidences    = -sobelConfidences;

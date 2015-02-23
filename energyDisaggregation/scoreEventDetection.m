@@ -21,14 +21,78 @@ function scoredOutputs = scoreEventDetection(detectedConfidences,trueTimes,haloI
 %                             s would be found if the detection module identified
 %                             an event anywhere within 5-15 s.
 %   varargin:                 quick option
-%                             - set to 0 to use all unique confidences
-%                             - set to 1 to use 1000 unique between 0 and
-%                               max
+%                             - for quick analysis, use n thresholds
+%                               instead of the number of unique thresholds
 %
 % OUTPUTS:
 %   scoredOutputs:
 %     onRoc                     - Nx2 matrix of Pd and FA/hr for on events
 %     offRoc                    - Nx2 matrix of Pd and FA/hr for off events
+
+debugMode = 1;
+
+%%
+% [onAlarmInds, onAlarmConfs] = as.thresholdedConnectedRegionMax(detectedConfidences.confidences);%,threshold)
+% onAlarmTimes = detectedConfidences.timeStamps(onAlarmInds);
+% 
+% [offAlarmInds, offAlarmConfs] = as.thresholdedConnectedRegionMax(-detectedConfidences.confidences);%,threshold)
+% offAlarmTimes = detectedConfidences.timeStamps(offAlarmInds);
+% %%
+% 
+% %% Score it with a sparse matrix.
+% utcHour = 1/24;
+% tRes = detectedConfidences.timeStamps(2) - detectedConfidences.timeStamps(1);
+% nHours = tRes*sum(detectedConfidences.keepLogicals)/utcHour;
+% utcHalo = haloInS/86400;
+% 
+% nOnAlarms = size(onAlarmConfs,1);
+% nOnEvents = size(trueTimes.onEvents,1);
+% 
+% alarmTruthPairingsOn = sparse(nOnAlarms,nOnEvents);
+% 
+% trueOn = trueTimes.onEventsTimes;
+% % Check with the halo
+% for alarmInc = 1:nOnAlarms
+%     for truthInc = 1:nOnEvents
+%         % If an event is detected within the halo of a true event, mark that
+%         % alarm as successful.
+%         if abs(onAlarmTimes(alarmInc) - trueOn(truthInc)) < utcHalo
+%             alarmTruthPairingsOn(alarmInc,truthInc) = 1;
+%         end
+%     end
+% end
+% 
+% if debugMode
+%     figure;
+%     imagesc(alarmTruthPairingsOn)
+% end
+% 
+% isFalseOn = sum(alarmTruthPairingsOn,2)==0;
+% isHitOn = ~isFalseOn;
+% 
+% isMissedOn = sum(alarmTruthPairingsOn,1)==0;
+% isDetectedOn = ~isMissedOn;
+% 
+% eventConfidences = nan(nOnEvents,1);
+% eventAlarmTimes = nan(nOnEvents,1);
+% for iEvent = 1:nOnEvents
+%     correspondingAlarms = find(alarmTruthPairingsOn(:,iEvent));
+%     [maxConf, localmaxInd]= max(onAlarmConfs(correspondingAlarms)); % if there are multiple hits within a halo of an event then  take maximum confidence
+% 
+%     if ~isempty(maxConf)
+%         eventConfidences(iEvent) = maxConf;
+%         eventAlarmTimes(iEvent) = onAlarmTimes(correspondingAlarms(localmaxInd));
+%     end
+% end
+% 
+% falseAlarmConfidences = onAlarmConfs(isFalseOn);
+% falseAlarmTimes = onAlarmTimes(isFalseOn);
+% 
+% [ nfa, pd] = prtScoreRocNfa(prtDataSetClass(cat(1,falseAlarmConfidences,eventConfidences),prtUtilY(length(falseAlarmConfidences),length(eventConfidences))));
+% 
+% plot(nfa/nHours,pd)
+  
+%%
 
 %% Find the unique values in the input confidences
 onLogicals = detectedConfidences.confidences >= 0 ;
@@ -38,8 +102,9 @@ uniqueOns = unique(detectedConfidences.confidences(onLogicals));
 uniqueOffs = unique(detectedConfidences.confidences(offLogicals));
 
 if ~isempty(varargin)
-  uniqueOns = linspace(0,max(detectedConfidences.confidences),1000)';
-  uniqueOffs = linspace(0,min(detectedConfidences.confidences),1000)';
+  threshIncrement = max(abs(detectedConfidences.confidences))/varargin{1};
+  uniqueOns = linspace(threshIncrement,max(detectedConfidences.confidences),varargin{1})';
+  uniqueOffs = linspace(threshIncrement,min(detectedConfidences.confidences),varargin{1})';
 end
 
 
@@ -53,7 +118,13 @@ utcHalo = haloInS/86400;
 
 utcHour = 1/24;
 
-nHours = (max(detectedConfidences.timeStamps) - min(detectedConfidences.timeStamps))/utcHour;
+tRes = detectedConfidences.timeStamps(2) - detectedConfidences.timeStamps(1);
+
+if ~isempty(detectedConfidences.keepLogicals)
+    nHours = tRes*sum(detectedConfidences.keepLogicals)/utcHour;
+else
+  nHours = (max(detectedConfidences.timeStamps) - min(detectedConfidences.timeStamps))/utcHour;  
+end
 
 % Initialize the rocs.  First column is false alarm rate, second is
 % sensitivity.
@@ -75,8 +146,10 @@ onDone = zeros(size(uniqueOns,1),1);
 nOns = max(size(uniqueOns));
 onPercent = [1:nOns]'/nOns;
 
-figure;
-fH = plot(onPercent,onDone,'YDataSource','onDone');
+if debugMode
+  figure;
+  fH = plot(onPercent,onDone,'YDataSource','onDone');
+end
 
 tStart = tic;
 for onInc = 1:size(uniqueOns,1)
@@ -130,14 +203,22 @@ for onInc = 1:size(uniqueOns,1)
   onRoc(onInc,1) = nFalseAlarms/nHours;
   onRoc(onInc,2) = truthHits/nTrue;
   
+  %% Addition made on 20 October 2014 to yield false alarm rate within [0,1]
+  onRoc(onInc,3) = (nTrue + nFalseAlarms)/max(size(detectedConfidences.confidences));
+  
   %% Progress bar
-  onDone(onInc) = 1;
-  refreshdata(fH,'caller')
-  drawnow
+  if debugMode
+      if ishandle(fH)
+          onDone(onInc) = 1;
+          refreshdata(fH,'caller')
+          drawnow
+      end
+  end
   
 end
 tStop = toc(tStart);
-
+onRoc = cat(1,[max(onRoc(:,1)),1,1],onRoc);
+onRoc = cat(1,onRoc,[0 0 0]);
 
 
 
@@ -212,14 +293,31 @@ for offInc = 1:size(uniqueOffs,1)
   offRoc(offInc,1) = nFalseAlarms/nHours;
   offRoc(offInc,2) = truthHits/nTrue;
   
+  %% Addition made on 20 October 2014 to yield false alarm rate within [0,1]
+  offRoc(offInc,3) = (nTrue + nFalseAlarms)/max(size(detectedConfidences.confidences));
+
   %% Progress bar
-  offDone(offInc) = 1;
-  refreshdata(fH,'caller')
-  drawnow
+  if debugMode
+      if ishandle(fH)
+          offDone(offInc) = 1;
+          refreshdata(fH,'caller')
+          drawnow
+      end
+  end
 end
 tStop = toc(tStart);
+
+offRoc = cat(1,[max(offRoc(:,1)),1,1],offRoc);
+offRoc = cat(1,offRoc,[0 0 0]);
+
 
 scoredOutputs.onRoc = onRoc;
 scoredOutputs.offRoc = offRoc;
 scoredOutputs.onThresholds = uniqueOns;
 scoredOutputs.offThresholds = uniqueOffs;
+% scoredOutputs.onTP = onTP;
+% scoredOutputs.offTP = offTP;
+% scoredOutputs.onFP = onFP;
+% scoredOutputs.offFP = offFP;
+% scoredOutputs.onMisses = onMisses;
+% scoredOutputs.offMisses = offMisses;
