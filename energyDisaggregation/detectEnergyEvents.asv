@@ -6,17 +6,60 @@
 % Based on code originally from Kyle Bradbury, PhD, Duke University.
 % The purpose of this function is to detect events from energyDataSets.
 %
+% detectedEvents = detectEnergyEvents(energyDS,eventParameters,varargin)
+%
 % This function just wraps detectEventConfidencs.
+% DEFAULT INPUTS:
+% eventParameters.data = energyDataSet.data(:,1);
+% eventParameters.halfWindowInS = 120;
+% eventParameters.threshold = 0.2;
+% eventParameters.smoothFactor = 0.5;
+% eventParameters.timeStamps = [energyDataSet.observationInfo.times]';
+% eventParameters.bufferLength = 30;
 
 function detectedEvents = detectEnergyEvents(energyDS,eventParameters,varargin)
 
+%% Parse the optional inputs.
+options.device = 1:energyDS.nFeatures;
+options.detectorType = 'glr';
+options.halfWindowInS = 61;
+options.threshold = 0.2;
+options.smoothFactor = 0.5;
+options.bufferLength = 0;
+
+parsedOut = prtUtilSimpleInputParser(options,varargin);
+
+
+device = parsedOut.device;
+detectorType = parsedOut.detectorType;
+
+ds.halfWindowInS = parsedOut.halfWindowI
+
+
+%%%%%
+
 ds = eventParameters;
 
-if isempty(varargin)
-  for deviceInc = 1:energyDS.nFeatures
-    ds.data = energyDS.data(:,deviceInc);
-    detectedEvents(deviceInc) = detectEventConfidences(ds);
-  end
-else
-  if varargin
+for dInc = 1:numel(device)
+    ds.data = energyDS.data(:,device(dInc));
+    detectedEvents(device(dInc)) = detectEventConfidences(ds,'detectorType',detectorType);
 end
+% 
+% if isempty(varargin)
+%   for deviceInc = 1:energyDS.nFeatures
+%     ds.data = energyDS.data(:,deviceInc);
+%     detectedEvents(deviceInc) = detectEventConfidences(ds);
+%   end
+% else
+%   if strcmp(varargin{1},'sobel')
+%     for deviceInc = 1:energyDS.nFeatures
+%       ds.data = energyDS.data(:,deviceInc);
+%       detectedEvents(deviceInc) = detectEventConfidences(ds,'sobel');
+%     end
+%   else
+%     for deviceInc = 1:energyDS.nFeatures
+%       ds.data = energyDS.data(:,deviceInc);
+%       detectedEvents(deviceInc) = detectEventConfidences(ds);
+%     end
+%   end
+% end
