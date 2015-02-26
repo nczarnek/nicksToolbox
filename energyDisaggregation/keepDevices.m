@@ -19,6 +19,9 @@
 %   joinedDS:               - modified dataset with "other" category
 %   joinedEvents:           - modified eventTimes structure with events for
 %                             each type of device
+%
+% NOTE: THIS WAS MADE BEFORE I MADE THE energyEventClass, SO ALL OF THE
+% ISFIELD CHECKS COULD BE ELIMINATED AT THIS POINT.
 
 function [joinedDS,joinedEvents] = keepDevices(keepIdx,energyDS,varargin)
 

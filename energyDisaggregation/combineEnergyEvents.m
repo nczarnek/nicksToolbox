@@ -33,13 +33,17 @@ end
 % On
 [~,uniqueOnIdx] = unique(combinedEvents.onEventsTimes);
 combinedEvents.onEventsTimes = combinedEvents.onEventsTimes(uniqueOnIdx);
-combinedEvents.onEvents = combinedEvents.onEvents(uniqueOnIdx);
+if ~isempty(combinedEvents.onEvents)
+    combinedEvents.onEvents = combinedEvents.onEvents(uniqueOnIdx);
+end
 combinedEvents.onEventsIndex = combinedEvents.onEventsIndex(uniqueOnIdx);
 
 [~,uniqueOffIdx] = unique(combinedEvents.offEventsTimes);
 combinedEvents.offEventsTimes = combinedEvents.offEventsTimes(uniqueOffIdx);
 combinedEvents.offEventsIndex = combinedEvents.offEventsIndex(uniqueOffIdx);
-combinedEvents.offEvents = combinedEvents.offEvents(uniqueOffIdx);
+if ~isempty(combinedEvents.offEvents)
+    combinedEvents.offEvents = combinedEvents.offEvents(uniqueOffIdx);
+end
 
 
 combinedEvents.timeStamps = eventTimes(1).timeStamps;

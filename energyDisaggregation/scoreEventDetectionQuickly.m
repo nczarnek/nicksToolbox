@@ -30,13 +30,17 @@ if isempty(trueTimes.onEventsTimes)
 end
 
 %% Parse varargin
-[tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = parseStuff(detectedConfidences,trueTimes,...
-    haloInS,varargin);
+[tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = ...
+    parseStuff(detectedConfidences,trueTimes,haloInS,varargin);
 
 %%
 
 utcHour = 1/24;
-nHours = tRes*sum(detectedConfidences.keepLogicals)/utcHour;
+if ~isempty(detectedConfidences.keepLogicals)
+    nHours = tRes*sum(detectedConfidences.keepLogicals)/utcHour;
+else
+    nHours = tRes*numel(detectedConfidences.confidences)/utcHour;
+end
 utcHalo = haloInS/86400;
 
 [onAlarmInds, onAlarmConfs] = as.thresholdedConnectedRegionMax(detectedConfidences.confidences,minThreshold);
@@ -85,7 +89,7 @@ offAlarmInds = offAlarmInds(offAlarmIdx);
 %% On events
 
 nOnAlarms = size(onAlarmConfs,1);
-nOnEvents = size(trueTimes.onEvents,1);
+nOnEvents = size(trueTimes.onEventsIndex,1);
 
 alarmTruthPairingsOn = sparse(nOnAlarms,nOnEvents);
 
@@ -176,7 +180,7 @@ if isempty(trueTimes.offEventsTimes)
     return
 end
 nOffAlarms = size(offAlarmConfs,1);
-nOffEvents = size(trueTimes.offEvents,1);
+nOffEvents = size(trueTimes.offEventsIndex,1);
 
 alarmTruthPairingsOff = sparse(nOffAlarms,nOffEvents);
 
@@ -250,6 +254,7 @@ if debugMode
         className = trueTimes.className;
     end
     title(['Off ROC for ',className],'interpreter','none')
+    ylim([0 1])
 end
 
 outputStruct.offFa = nfaOff/nHours;
