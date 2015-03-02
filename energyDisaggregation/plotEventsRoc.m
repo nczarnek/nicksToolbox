@@ -10,14 +10,16 @@ function plotEventsRoc(performanceStruct,varargin)
 
 options.XL = [0 1];
 options.deviceName = [];
+options.marker = '--';
 parsedOut = prtUtilSimpleInputParser(options,varargin);
 XL = parsedOut.XL;
 deviceName = parsedOut.deviceName;
+rocMarker = parsedOut.marker;
 
 figure;
-plot(performanceStruct.onFa,performanceStruct.onPd,'g--')
+plot(performanceStruct.onFa,performanceStruct.onPd,['g',rocMarker])
 hold on
-plot(performanceStruct.offFa,performanceStruct.offPd,'r--')
+plot(performanceStruct.offFa,performanceStruct.offPd,['r',rocMarker])
 
 xlabel('FA/hr')
 ylabel('Pd')
@@ -31,5 +33,5 @@ legend('On events','Off events')
 xlim([XL(1) XL(2)])
 ylim([0 1])
 
-
+grid on
 end
