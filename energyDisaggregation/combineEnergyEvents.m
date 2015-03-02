@@ -18,7 +18,7 @@ combinedEvents.house = eventTimes(1).house;
 combinedEvents.houseNumber = eventTimes(1).houseNumber;
 combinedEvents.keepLogicals = eventTimes(1).keepLogicals;
 
-for dInc = 1:max(size(devices))
+for dInc = 1:numel(devices)
     combinedEvents.offEvents = cat(1,combinedEvents.offEvents,eventTimes(devices(dInc)).offEvents);
     combinedEvents.offEventsIndex = cat(1,combinedEvents.offEventsIndex,eventTimes(devices(dInc)).offEventsIndex);
     combinedEvents.offEventsTimes = cat(1,combinedEvents.offEventsTimes,eventTimes(devices(dInc)).offEventsTimes);
