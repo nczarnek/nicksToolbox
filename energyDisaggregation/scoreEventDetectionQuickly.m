@@ -20,17 +20,19 @@ if isempty(trueTimes.onEventsTimes)
     outputStruct.onPd = [];
     outputStruct.onFalseAlarmConfidences = [];
     outputStruct.onFalseAlarmTimes = [];
+    outputStruct.onThresholds = [];
     
     outputStruct.offFa = [];
     outputStruct.offPd = [];
     outputStruct.offFalseAlarmConfidences = [];
     outputStruct.offFalseAlarmTimes = [];
+    outputStruct.offThresholds = [];
 
     return
 end
 
 %% Parse varargin
-[tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = ...
+[tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner,onlyOn] = ...
     parseStuff(detectedConfidences,trueTimes,haloInS,varargin);
 
 %%
@@ -71,8 +73,10 @@ offAlarmInds = offAlarmInds(keepOff);
 offAlarmConfs = offAlarmConfs(keepOff);
 offAlarmTimes = offAlarmTimes(keepOff);
 
-cleanedOns = ignoreSpecificEvents(onAlarmTimes,ignoredAlarms,tRes,miniHalo);
-cleanedOffs = ignoreSpecificEvents(offAlarmTimes,ignoredAlarms,tRes,miniHalo);
+truthTimes = [trueTimes.onEventsTimes;trueTimes.offEventsTimes];
+
+cleanedOns = ignoreSpecificEvents(onAlarmTimes,ignoredAlarms,tRes,'haloInS',miniHalo,'truthTimes',truthTimes);
+cleanedOffs = ignoreSpecificEvents(offAlarmTimes,ignoredAlarms,tRes,'haloInS',miniHalo,'truthTimes',truthTimes);
 
 [~,onAlarmIdx] = intersect(onAlarmTimes,cleanedOns);
 
@@ -133,6 +137,7 @@ isDetectedOn = ~isMissedOn;
 eventConfidences = nan(nOnEvents,1);
 eventAlarmTimes = nan(nOnEvents,1);
 for iEvent = 1:nOnEvents
+%     tStart = tic;
     correspondingAlarms = find(alarmTruthPairingsOn(:,iEvent));
     % if there are multiple hits within a halo of an event then  take maximum confidence
     [maxConf, localmaxInd]= max(onAlarmConfs(correspondingAlarms));
@@ -141,6 +146,8 @@ for iEvent = 1:nOnEvents
         eventConfidences(iEvent) = maxConf;
         eventAlarmTimes(iEvent) = onAlarmTimes(correspondingAlarms(localmaxInd));
     end
+%     tStop = toc(tStart);
+%     fprintf(1,['Event ',num2str(iEvent),' of ',num2str(nOnEvents),': ',num2str(tStop),'s\n'])
 end
 
 falseAlarmConfidences = onAlarmConfs(isFalseOn);
@@ -152,7 +159,7 @@ falseAlarmTimes = onAlarmTimes(isFalseOn);
 if isempty(falseAlarmConfidences)
     falseAlarmConfidences = min(eventConfidences) - 1;
 end
-[ nfaOn, pdOn] = prtScoreRocNfa(prtDataSetClass(cat(1,falseAlarmConfidences,...
+[ nfaOn, pdOn, onThresholds] = prtScoreRocNfa(prtDataSetClass(cat(1,falseAlarmConfidences,...
     eventConfidences),prtUtilY(length(falseAlarmConfidences),length(eventConfidences))));
 
 if debugMode
@@ -174,11 +181,33 @@ outputStruct.onFa = nfaOn/nHours;
 outputStruct.onPd = pdOn;
 outputStruct.onFalseAlarmConfidences = falseAlarmConfidences;
 outputStruct.onFalseAlarmTimes = falseAlarmTimes;
+outputStruct.onThresholds = onThresholds;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 %% Off events
 if isempty(trueTimes.offEventsTimes)
     return
 end
+if onlyOn
+    return
+end
+
 nOffAlarms = size(offAlarmConfs,1);
 nOffEvents = size(trueTimes.offEventsIndex,1);
 
@@ -241,7 +270,7 @@ falseAlarmTimes = offAlarmTimes(isFalseOff);
 if isempty(falseAlarmConfidences)
     falseAlarmConfidences = min(eventConfidences) - 1;
 end
-[ nfaOff, pdOff] = prtScoreRocNfa(prtDataSetClass(cat(1,falseAlarmConfidences,eventConfidences),prtUtilY(length(falseAlarmConfidences),length(eventConfidences))));
+[ nfaOff, pdOff, offThresholds] = prtScoreRocNfa(prtDataSetClass(cat(1,falseAlarmConfidences,eventConfidences),prtUtilY(length(falseAlarmConfidences),length(eventConfidences))));
 
 if debugMode
     figure
@@ -261,6 +290,7 @@ outputStruct.offFa = nfaOff/nHours;
 outputStruct.offPd = pdOff;
 outputStruct.offFalseAlarmConfidences = falseAlarmConfidences;
 outputStruct.offFalseAlarmTimes = falseAlarmTimes;
+outputStruct.offThresholds = offThresholds;
 
 
 end
@@ -286,16 +316,17 @@ end
 
 
 %% Subfunctions
-function [tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = parseStuff(detectedConfidences,trueTimes,...
+function [tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner,onlyOn] = parseStuff(detectedConfidences,trueTimes,...
     haloInS,varIn)
 
     p = inputParser;
     defaultDebug = false;
     defaultignoredAlarms = [];
     defaultTRes = detectedConfidences.timeStamps(2) - detectedConfidences.timeStamps(1);
-    defaultMiniHalo = 2;
+    defaultMiniHalo = 20;
     defaultMinThreshold = 0.01;
     defaultIgnoreInner = false;
+    defaultOnlyOn = true;
 
     
     addRequired(p,'detectedConfidences',@isobject);
@@ -307,6 +338,7 @@ function [tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = pars
     addOptional(p,'miniHalo',defaultMiniHalo,@isnumeric);
     addOptional(p,'minThreshold',defaultMinThreshold,@isnumeric);
     addOptional(p,'ignoreInner',defaultIgnoreInner,@islogical);
+    addOptional(p,'onlyOn',defaultOnlyOn,@islogical);
 
     parse(p,detectedConfidences,trueTimes,haloInS,varIn{:});
 
@@ -317,4 +349,5 @@ function [tRes,debugMode,ignoredAlarms,miniHalo,minThreshold,ignoreInner] = pars
     miniHalo = p.Results.miniHalo;
     minThreshold = p.Results.minThreshold;
     ignoreInner = p.Results.ignoreInner;
+    onlyOn = p.Results.onlyOn;
 end

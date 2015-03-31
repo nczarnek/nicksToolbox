@@ -18,8 +18,10 @@ rocMarker = parsedOut.marker;
 
 figure;
 plot(performanceStruct.onFa,performanceStruct.onPd,['g',rocMarker])
-hold on
-plot(performanceStruct.offFa,performanceStruct.offPd,['r',rocMarker])
+if isfield(performanceStruct,'offPd')
+    hold on
+    plot(performanceStruct.offFa,performanceStruct.offPd,['r',rocMarker])
+end
 
 xlabel('FA/hr')
 ylabel('Pd')

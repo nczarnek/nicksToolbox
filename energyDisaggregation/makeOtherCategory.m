@@ -10,13 +10,13 @@
 function eventTimes = makeOtherCategory(eventTimes,classNumbers,varargin)
 
 %% Parse everything
-% options.devices = 1:numel(eventTimes);
-% parsedOut = prtUtilSimpleInputParser(options,varargin);
-% devices = parsedOut.devices;
+options.className = {'other'};
+options.classNumber = 1000;
+parsedOut = prtUtilSimpleInputParser(options,varargin);
+className = parsedOut.className;
+classNumber = parsedOut.classNumber;
 
 %% Determine which classes to combine.
-eT = eventTimes;
-
 eventIdx = zeros(numel(classNumbers),1);
 
 for cInc = 1:numel(classNumbers)
@@ -42,8 +42,8 @@ for eInc = 1:numel(eventIdx)
     
 end
 
-otherEvents.className = 'other';
-otherEvents.classNumber = 1000;
+otherEvents.className = className;
+otherEvents.classNumber = classNumber;
 
 %% Remove the other events from the eventTimes array, and append the new 
 % combined events

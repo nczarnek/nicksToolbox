@@ -46,15 +46,20 @@ for fInc = 1:assignedPower.nFeatures
   trueClassIdx = find(trueClasses == assignedClasses(fInc));
   
   %% Calculate RMS
-  errorSet.data(1,fInc) = sqrt(1/timeSpanned * sum((truePower.data(:,trueClassIdx) - assignedPower.data(:,fInc)).^2));
+  errorSet.data(1,fInc) = sqrt(1/timeSpanned * ...
+      sum((truePower.data(:,trueClassIdx) - assignedPower.data(:,fInc)).^2));
   
   %% Calculate percent energy explained
   errorSet.data(2,fInc) = sum(assignedPower.data(:,fInc))/aggregateTotalEnergy;
   
   %% Calculate the mean normalized error.
-  errorSet.data(3,fInc) = abs(sum(truePower.data(:,trueClassIdx)) - sum(assignedPower.data(:,fInc)))/sum(truePower.data(:,trueClassIdx));
+  errorSet.data(3,fInc) = abs(sum(truePower.data(:,trueClassIdx)) - ...
+      sum(assignedPower.data(:,fInc)))/sum(truePower.data(:,trueClassIdx));
   
   %% Calculate chance RMS according to the mean of the current device's true power.
-  meanDeviceSignal = ones(truePower.nObservations,1) * mean(truePower.data(:,trueClassIdx));
-  errorSet.data(4,fInc) = sqrt(1/timeSpanned * sum((truePower.data(:,trueClassIdx) - meanDeviceSignal).^2));
+  meanDeviceSignal = ones(truePower.nObservations,1) * ...
+      mean(truePower.data(:,trueClassIdx));
+  
+  errorSet.data(4,fInc) = sqrt(1/timeSpanned * ...
+      sum((truePower.data(:,trueClassIdx) - meanDeviceSignal).^2));
 end

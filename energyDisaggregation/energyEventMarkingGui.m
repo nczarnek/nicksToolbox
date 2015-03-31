@@ -23,7 +23,7 @@
 
 function energyEventMarkingGui(energyDataSet,saveDir,varargin)
 
-[dT,specificDevices,truthFromBeginning,iterationsBeforeSave,startTimeInHrs,maxDiff] = ...
+[dT,specificDevices,truthFromBeginning,iterationsBeforeSave,startTimeInHrs,maxDiff,fileName] = ...
     parseStuff(energyDataSet,varargin);
 
 if ~exist(saveDir,'dir')
@@ -44,8 +44,8 @@ xTimes = energyDataSet.getTimesFromUTC('timeScale','days','zeroTimes',false);
 
 eventTimes = repmat(energyEventClass,energyDataSet.nFeatures,1);
 
-if exist(fullfile(saveDir,'eventTimes.mat'),'file')
-    load(fullfile(saveDir,'eventTimes.mat'))
+if exist(fullfile(saveDir,fileName),'file')
+    load(fullfile(saveDir,fileName))
 end
 
 %% Add the timestamps and keeplogicals
@@ -149,7 +149,7 @@ for subInc = 1:max(size(specificDevices))
                     eventTimes(currentDevice).className = energyDataSet.featureInfo(currentDevice).deviceName;
                     
                     %% Save the times
-                    save(fullfile(saveDir,'eventTimes.mat'),'eventTimes')
+                    save(fullfile(saveDir,fileName),'eventTimes')
                     
                     
                 end
@@ -288,7 +288,7 @@ for subInc = 1:max(size(specificDevices))
                         
                         if mod(currentIt,iterationsBeforeSave) == 0
                             %% Save after marking every feature.
-                            save(fullfile(saveDir,'eventTimes.mat'),'eventTimes')
+                            save(fullfile(saveDir,fileName),'eventTimes')
                         end
                         
                     end
@@ -435,7 +435,7 @@ for subInc = 1:max(size(specificDevices))
                         if mod(currentIt,iterationsBeforeSave) == 0
                             % Old savings code 2
                             %% Save after marking every feature.
-                            save(fullfile(saveDir,'eventTimes.mat'),'eventTimes')
+                            save(fullfile(saveDir,fileName),'eventTimes')
                         end
                         
                         currentIt = currentIt + 1;
@@ -445,7 +445,7 @@ for subInc = 1:max(size(specificDevices))
                 
                 %% Save after marking every feature.
                 % Insert old saving code 1
-                save(fullfile(saveDir,'eventTimes'),'eventTimes')
+                save(fullfile(saveDir,fileName),'eventTimes')
                 
                 
                 
@@ -466,7 +466,7 @@ end
 
 end
 
-function [dT,specificDevices,truthFromBeginning,iterationsBeforeSave,startTimeInHrs,maxDiff] = ...
+function [dT,specificDevices,truthFromBeginning,iterationsBeforeSave,startTimeInHrs,maxDiff,fileName] = ...
     parseStuff(energyDataSet,varIn)
 %% Establish defaults
 options.dT = energyDataSet.observationInfo(2).times - energyDataSet.observationInfo(1).times;
@@ -475,6 +475,7 @@ options.truthFromBeginning = false;
 options.iterationsBeforeSave = 3;
 options.startTimeInHrs = 0;
 options.maxDiff = 35;
+options.fileName = 'eventTimes.mat';
 
 parsedOut = prtUtilSimpleInputParser(options,varIn);
 
@@ -485,6 +486,7 @@ truthFromBeginning = parsedOut.truthFromBeginning;
 iterationsBeforeSave = parsedOut.iterationsBeforeSave;
 startTimeInHrs = parsedOut.startTimeInHrs;
 maxDiff = parsedOut.maxDiff;
+fileName = parsedOut.fileName;
 end
 
 
