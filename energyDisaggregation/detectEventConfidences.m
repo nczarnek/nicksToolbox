@@ -114,8 +114,8 @@ offIndex    = logical(minima .* (events == -1)) ;
 if useSobel
   [~,sobelThresh,~,sobelConfidences] = edge(data,'sobel');
   
-  onLogicals = sobelConfidences>-sobelThresh;
-  offLogicals = sobelConfidences<sobelThresh;
+  onLogicals = sobelConfidences<-sobelThresh;
+  offLogicals = sobelConfidences>sobelThresh;
   
   onIndex = [false;diff(onLogicals)>0];
   offIndex = [false;diff(offLogicals)>0];

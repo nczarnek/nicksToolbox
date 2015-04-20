@@ -100,6 +100,7 @@ alarmTruthPairingsOn = sparse(nOnAlarms,nOnEvents);
 trueOn = trueTimes.onEventsTimes;
 % Check with the halo
 for alarmInc = 1:nOnAlarms
+    fprintf(1,[num2str(alarmInc),'/',num2str(nOnAlarms),'\n']);
     for truthInc = 1:nOnEvents
         % If an event is detected within the halo of a true event, mark that
         % alarm as successful.
@@ -152,7 +153,8 @@ end
 
 falseAlarmConfidences = onAlarmConfs(isFalseOn);
 falseAlarmTimes = onAlarmTimes(isFalseOn);
-
+hitAlarmConfidences = onAlarmConfs(isHitOn);
+hitAlarmTimes = onAlarmTimes(isHitOn);
 
 %% In the event of no false alarms, add on a dummy section so that prtScoreRocNfa
 % doesn't error out.
@@ -182,7 +184,11 @@ outputStruct.onPd = pdOn;
 outputStruct.onFalseAlarmConfidences = falseAlarmConfidences;
 outputStruct.onFalseAlarmTimes = falseAlarmTimes;
 outputStruct.onThresholds = onThresholds;
-
+outputStruct.onHitAlarmConfidences = hitAlarmConfidences;
+outputStruct.onHitAlarmTimes = hitAlarmTimes;
+outputStruct.detectedConfidences = detectedConfidences.confidences;
+outputStruct.timeStamps = detectedConfidences.timeStamps;
+outputStruct.nHours = nHours;
 
 
 
@@ -216,6 +222,7 @@ alarmTruthPairingsOff = sparse(nOffAlarms,nOffEvents);
 trueOff = trueTimes.offEventsTimes;
 % Check with the halo
 for alarmInc = 1:nOffAlarms
+    fprintf(1,[num2str(alarmInc),'/',num2str(nOffAlarms),'\n']);
     for truthInc = 1:nOffEvents
         % If an event is detected within the halo of a true event, mark that
         % alarm as successful.

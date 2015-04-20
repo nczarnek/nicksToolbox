@@ -9,10 +9,17 @@
 function fHandles = plotPowerPerformance(performanceObject,varargin)
 
 options.titleStr = [];
+options.removeFeatures = [];
+options.xRotate = true;
 parsedOuts = prtUtilSimpleInputParser(options,varargin);
 titleStr = parsedOuts.titleStr;
+removeFeatures = parsedOuts.removeFeatures;
+xRotate = parsedOuts.xRotate;
 
 fHandles = [];
+
+%% Remove the features that were sent in
+performanceObject = performanceObject.removeFeatures(removeFeatures);
 
 %% Go through each of the error types.
 for eType = 1:performanceObject.nObservations
@@ -29,7 +36,9 @@ for eType = 1:performanceObject.nObservations
         xlim([0 performanceObject.nFeatures + 1])
         xLabels = performanceObject.getFeatureNames;
         ax.XTickLabel = xLabels;
-        xticklabel_rotate;
+        if xRotate
+            xticklabel_rotate;
+        end
         
         
         ylabel('RMS error')
@@ -52,7 +61,9 @@ for eType = 1:performanceObject.nObservations
         xlim([0 performanceObject.nFeatures + 1])
         xLabels = performanceObject.getFeatureNames;
         ax.XTickLabel = xLabels;
-        xticklabel_rotate;
+        if xRotate
+            xticklabel_rotate;
+        end
         
         YL = ylim;
         rangeVals = range(performanceObject.data(eType,:));

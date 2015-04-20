@@ -2,8 +2,9 @@
 % SSPACISS Laboratory, Duke University
 % 3 March 2015
 %
-% makeSaveDir
-% The purpose of this function is to make a directory.
+% makeSaveDir(directoryName)
+% The purpose of this function is to make a directory if it doesn't already 
+% exist.
 
 function makeSaveDir(dirName)
 
