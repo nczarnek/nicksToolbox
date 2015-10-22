@@ -59,12 +59,14 @@ end
 % end
 
 %% Extract data from the input structure
-data            = ds.data;
-halfWindowInS   = ds.halfWindowInS ;
-bufferLength    = ds.bufferLength ;
-threshold       = ds.threshold ;
-smoothFactor    = ds.smoothFactor ;
-timeStamps      = ds.timeStamps ;
+data                    = ds.data;
+halfWindowInS           = ds.halfWindowInS ;
+bufferLength            = ds.bufferLength ;
+threshold               = ds.threshold ;
+smoothFactor            = ds.smoothFactor ;
+timeStamps              = ds.timeStamps ;
+extraSmooth             = ds.extraSmooth ;
+extraSmoothWindowInS    = ds.extraSmoothWindowInS ;
 
 %% Adjust the windowInS so that it's in UTC format.
 windowUTC = halfWindowInS/86400;
@@ -91,6 +93,23 @@ filter(bufferRange)     =  0 ;
 hFilterSize = roundodd(windowLength*smoothFactor) ;
 hFilter = fspecial('average', [hFilterSize 1]) ;
 smoothData = imfilter(data,hFilter) ;
+
+%% Add an additional smoothing step if desired.
+if extraSmooth
+    smoothUTC = extraSmoothWindowInS/86400;
+    smoothWindowLength = floor(2*round(smoothUTC/intervalBetweenSamples));
+    
+    smoothWindowLength = roundodd(smoothWindowLength);
+    
+    midPoint = (windowLength + 1)/2;
+    
+    hFilterSize = roundodd(smoothWindowLength*smoothFactor);
+    hFilter = fspecial('average',[hFilterSize 1]);
+    
+    smoothData = imfilter(smoothData,hFilter);
+end
+
+
 filteredData = imfilter(smoothData,filter) ;
 
 % Normalize by the length of the window

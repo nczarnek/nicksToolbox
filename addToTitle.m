@@ -13,9 +13,14 @@ h = get(gca,'Title');
 t = get(h,'String');
 
 %% Add on to the title
-newTitle = [t,', ',addOn];
-
+if numel(t) == 1
+    newTitle = [t,', ',addOn];
+else
+    t{end} = [t{end},', ',addOn];
+    newTitle = t;
+end
 title(newTitle)
+
 
 
 end

@@ -27,6 +27,8 @@ options.halfWindowInS = 61;
 options.threshold = 0.2;
 options.smoothFactor = 0.5;
 options.bufferLength = 0;
+options.extraSmooth = false;
+options.extraSmoothWindowInS = 61;
 
 parsedOut = prtUtilSimpleInputParser(options,varargin);
 
@@ -39,7 +41,8 @@ ds.threshold = parsedOut.threshold;
 ds.timeStamps = energyDS.getTimesFromUTC('timeScale','days','zeroTimes',false);
 ds.smoothFactor = parsedOut.smoothFactor;
 ds.bufferLength = parsedOut.bufferLength;
-
+ds.extraSmooth = parsedOut.extraSmooth;
+ds.extraSmoothWindowInS = parsedOut.extraSmoothWindowInS;
 
 %%%%%
 
